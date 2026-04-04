@@ -1,0 +1,17 @@
+{
+    "XGBoost": {
+        "f1": 0.618,
+        "roc_auc": 0.841,
+        "cv_score": 0.85
+    },
+    "Logistic Regression": {
+        "f1": 0.608,
+        "roc_auc": 0.833,
+        "cv_score": 0.864
+    },
+    "Random Forest": {
+        "f1": 0.595,
+        "roc_auc": 0.816,
+        "cv_score": 0.928
+    }
+}

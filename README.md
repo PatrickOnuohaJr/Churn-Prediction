@@ -1,92 +1,140 @@
-📊 Customer Churn Prediction
+# 📉 Customer Churn Prediction System
 
-This project predicts customer churn using a supervised machine learning approach for a telecom company. While this dataset comes from the telecom industry, the methodology and techniques demonstrated here are **scalable and adaptable to any industry** where customer retention is vital—such as finance, insurance, SaaS, e-commerce, and beyond. 
+A end-to-end machine learning system that predicts customer churn risk for a telecom company, 
+identifies the key drivers behind each prediction, and deploys a live interactive tool 
+for retention teams to prioritize outreach.
 
-This project serves as a **showcase of my data science skillset**, including data preprocessing, class imbalance handling, algorithm comparison, hyperparameter tuning, and model interpretation.
-
----
-
-## 🔍 Problem Statement
-
-Customer churn—when a customer discontinues service—is a key metric for subscription-based companies. For this project, we analyze customer behavior to predict churn using various customer and service attributes. Our goal is to **identify customers at risk of churning**, allowing businesses to take proactive retention actions.
+🚀 **[Live App → ponuoha-churn-prediction.streamlit.app](https://ponuoha-churn-prediction.streamlit.app/)**
 
 ---
 
-## 🧠 Algorithms Used
+## 🎯 Business Problem
 
-- **Logistic Regression** (best performing model after SMOTE + tuning)
-- **Random Forest** (tuned using GridSearchCV, competitive performance)
+Customer churn — when a customer cancels their service — directly impacts revenue. 
+Acquiring a new customer costs significantly more than retaining an existing one. 
+This system flags at-risk customers before they leave, giving retention teams a 
+prioritized list of who to contact and exactly why they were flagged.
 
-We experimented with **K-Nearest Neighbors (KNN)** and **XGBoost**, but deprioritized them based on evaluation results.
-
----
-
-## 🧪 Data Preprocessing
-
-- Removed irrelevant columns (`customerID`)
-- Encoded categorical variables with `LabelEncoder`/`get_dummies`
-- Addressed class imbalance using **SMOTE** (on training set only)
-- Train/test split: 80% train / 20% test
+**Dataset:** IBM Telco Customer Churn — 7,032 customers, 40 features after encoding  
+**Churn Rate:** 26.5% — a significant class imbalance requiring specialized handling
 
 ---
 
-## 📈 Model Evaluation
+## 🧠 Technical Approach
 
-Metrics used to evaluate models:
-- Accuracy
-- Precision, Recall, F1-Score (especially for minority class)
-- Confusion Matrix
-- Feature Importance (visualized)
+### Preprocessing Pipeline
+- Stratified 80/20 train/test split to preserve class distribution
+- StandardScaler applied to training data only — preventing data leakage
+- SMOTE applied exclusively to training set to handle class imbalance
+- One-hot encoding for categorical features — eliminating false ordinal relationships
+
+### Models Trained & Compared
+
+| Model | F1 Score | ROC-AUC | CV Score |
+|-------|----------|---------|----------|
+| Logistic Regression | 0.608 | 0.833 | 0.864 |
+| Random Forest | 0.595 | 0.816 | 0.928 |
+| **XGBoost ✓** | **0.618** | **0.841** | **0.850** |
+
+**XGBoost selected** as final model — highest F1 and ROC-AUC on held-out test data. 
+Random Forest's CV score gap (0.928 vs 0.816 test) indicated overfitting. 
+XGBoost used `scale_pos_weight` instead of SMOTE — the appropriate imbalance 
+handling technique for gradient boosting.
+
+### Why ROC-AUC Over Accuracy
+In a real retention workflow, teams don't classify every customer — they rank them 
+by risk and call the top N. ROC-AUC measures ranking quality directly. 
+A score of 0.841 means the model reliably places real churners near the top of 
+the risk-sorted list.
 
 ---
 
-## 🔧 Best Model & Performance
+## 🔍 SHAP Explainability
 
-**Best Model**: Logistic Regression  
-**Tuned Hyperparameters**:  
+Beyond global feature importance, this project implements SHAP (SHapley Additive 
+exPlanations) to explain individual predictions — answering not just "who will churn" 
+but "why this specific customer was flagged."
 
-```python
-{ 'C': 0.1, 'penalty': 'l1', 'solver': 'liblinear' }
-```
+**Top churn drivers identified:**
+- `Contract_Month-to-month` — mean SHAP impact: +0.69
+- `tenure` — mean SHAP impact: +0.40
+- `OnlineSecurity_No` — mean SHAP impact: +0.23
+- `MonthlyCharges` — mean SHAP impact: +0.21
+- `InternetService_Fiber optic` — mean SHAP impact: +0.18
+
+**Highest risk customer in test set:** 94.4% predicted churn probability — verified 
+correct. Short tenure (+0.85), month-to-month contract (+0.69), and $95 monthly 
+charges (+0.29) were the dominant risk factors.
 
 ---
 
-| Metric       | Score |
-|--------------|-------|
-| Accuracy     | 0.779 |
-| Precision    | 0.58 (for churned class) |
-| Recall       | 0.63 (for churned class) |
-| F1-Score     | 0.60 (for churned class) |
+## 📊 Visualizations
+
+| Visual | Description |
+|--------|-------------|
+| ![EDA](Visualizations/churn_eda.png) | Key churn drivers — contract type, internet service, tenure, monthly charges |
+| ![SHAP](Visualizations/shap_summary.png) | Global SHAP feature importance across all customers |
+| ![ROC](Visualizations/roc_curve_comparison.png) | ROC curve comparison — all three models vs random baseline |
+| ![Comparison](Visualizations/model_comparison.png) | F1, ROC-AUC, and CV score comparison across models |
 
 ---
 
-## 🔍 Feature Importance
+## 🚀 Live Application
 
-Below are the top 10 most influential features based on the two best models:
+The model is deployed as an interactive Streamlit web app. Input any customer profile 
+and receive:
+- Real-time churn probability score
+- Three-tier risk classification (High / Medium / Low)
+- SHAP-based explanation of the top features driving that specific prediction
+- Retention priority recommendation
 
-### Logistic Regression
-![Logistic Regression Feature Importance](Visualizations/logistic_regression_feature_importance.png)
-
-### Random Forest
-![Random Forest Feature Importance](Visualizations/random_forest_feature_importance.png)
-
+**→ [Launch App](https://ponuoha-churn-prediction.streamlit.app/)**
 
 ---
 
 ## 🧰 Tech Stack
 
-- **Languages**: Python 3.12  
-- **Libraries/Tools**:
-  - `pandas`, `numpy`, `matplotlib`, `seaborn` for data manipulation and visualization  
-  - `scikit-learn` for model training, evaluation, and hyperparameter tuning  
-  - `imblearn` for SMOTE-based class balancing  
-  - `joblib` for model saving  
-  - `Jupyter Notebook` + `VS Code` for development  
+**Modeling:** Python, XGBoost, Scikit-Learn, SMOTE (imbalanced-learn), SHAP  
+**Data:** Pandas, NumPy  
+**Visualization:** Matplotlib, Seaborn  
+**Deployment:** Streamlit, Streamlit Cloud  
+**Environment:** Jupyter Notebook, VS Code, Git/GitHub  
+
+---
+
+## 📁 Repository Structure
+
+Churn-Prediction/
+│
+├── Churn_Prediction_v2.ipynb    ← Full ML pipeline notebook
+├── app.py                        ← Streamlit web application
+├── requirements.txt
+├── README.md
+│
+├── Data/
+│   └── Telco-Customer-Churn.csv
+│
+├── Models/
+│   ├── xgboost_model.pkl
+│   ├── scaler.pkl
+│   ├── feature_names.pkl
+│   └── model_performance.json
+│
+└── Visualizations/
+├── churn_eda.png
+├── shap_summary.png
+├── shap_bar.png
+├── shap_waterfall.png
+├── roc_curve_comparison.png
+└── model_comparison.png
+
 
 ---
 
 ## 👨🏽‍💻 Author
 
 **Patrick Onuoha Jr.**  
-Data Science Senior @ University of North Texas  
-🔗 [GitHub](https://github.com/TheDataTenno) | 📧 [Email](mailto:ponuoha2017@gmail.com) | 🧠 Passionate about building data-driven solutions that scale across industries.
+B.S. Data Science — University of North Texas | GPA: 3.8  
+🔗 [GitHub](https://github.com/PatrickOnuohaJr) | 
+📧 [Email](mailto:ponuoha2017@gmail.com) | 
+💼 [LinkedIn](https://www.linkedin.com/in/patrickonuohajr/)
